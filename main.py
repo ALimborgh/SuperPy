@@ -38,28 +38,36 @@ def main():
         parser.print_help()
 
 # Function to add a product to a CSV file
-def add_to_csv(product_name, price, quantity, expiration_date, filename):
+def add_to_csv(product_name, price, quantity, expiration_date, filename, bought_date=None):
     # Open the CSV file in append mode
     with open(filename, 'a', newline='') as file:
         writer = csv.writer(file)
         # Write the product details as a new row in the CSV file
-        writer.writerow([product_name, price, quantity, expiration_date])
+        writer.writerow([product_name, price, quantity, expiration_date, bought_date])
     # Print a confirmation message
     print(f'Added product: {product_name} with price: {price} and quantity: {quantity} and expiration date: {expiration_date} to {filename}')
 
 # Function to buy a product
-def buy_product(product_name, price, quantity, expiration_date):
+def buy_product(product_name, price, quantity, expiration_date, filename='bought.csv', bought_date=None):
+    # If no date is provided, use the current date
+    if not bought_date:
+        bought_date = date.today()
     # Add the product to the 'bought.csv' file
-    add_to_csv(product_name, price, quantity, expiration_date, 'bought.csv')
+    bought_date_str = bought_date.strftime('%Y-%m-%d')
+    add_to_csv(product_name, price, quantity, expiration_date, filename, bought_date_str)
 
 # Function to sell a product
-def sell_product(product_name):
+def sell_product(product_name, sold_date=None, filename='sold.csv'):
+    # If no date is provided, use the current date
+    if not sold_date:
+        sold_date = date.today()
     # Get the product details
     product = get_product_details(product_name)
     if product:
-        price, quantity, expiration_date = product
+        price, quantity, expiration_date, bought_date_str = product
         # Add the product to the 'sold.csv' file
-        add_to_csv(product_name, price, quantity, expiration_date, 'sold.csv')
+        sold_date_str = sold_date.strftime('%Y-%m-%d')
+        add_to_csv(product_name, price, quantity, expiration_date, filename, sold_date_str)
         # Remove the product from the 'bought.csv' file
         remove_from_csv(product_name, 'bought.csv')
     else:
@@ -110,18 +118,18 @@ def list_products(print_table=True):
         # If the print_table argument is True, print the table
         if print_table:
             # Create a table with column names
-            table = PrettyTable(['Product Name', 'Price', 'Quantity', 'Expiration Date'])
+            table = PrettyTable(['Product Name', 'Price', 'Quantity', 'Expiration Date', 'Bought Date'])
             # For each product in the list
             for product in products:
                 # If the product has the correct number of columns
-                if len(product) == 4:
+                if len(product) == 5:
                     # Convert each element to a string and strip whitespace
                     product = [str(element).strip() for element in product]
                     # Add the product as a row in the table
                     table.add_row(product)
                 else:
                     # If the product does not have the correct number of columns, print a warning message
-                    print(f"Skipping product {product} because it has {len(product)} columns instead of 4.")
+                    print(f"Skipping product {product} because it has {len(product)} columns instead of 5.")
             # Print the table
             print(table)
     # Return the list of products
