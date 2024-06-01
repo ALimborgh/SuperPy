@@ -2,10 +2,7 @@
 import argparse
 import csv
 from datetime import date
-from math import prod
-import re
 from prettytable import PrettyTable
-import io
 
 # Do not change these lines.
 __winc_id__ = "a2bc36ea784242e4989deb157d527ba0"
@@ -13,57 +10,84 @@ __human_name__ = "superpy"
 
 
 # Your code below this line.
+# Main function
 def main():
+    # Create an argument parser
     parser = argparse.ArgumentParser(description='Supermarket CLI')
     
-    parser.add_argument('--add-product', nargs=2, metavar=('product_name', 'price'), help='Add a new product to the supermarket')
+    # Add arguments to the parser
+    parser.add_argument('--add-product', nargs=4, metavar=('product_name', 'price', 'quantity', 'expiration_date'), help='Add a new product to the supermarket')
     parser.add_argument('--remove-product', metavar='product_name', help='Remove a product from the supermarket')
     parser.add_argument('--list-products', action='store_true', help='List all products in the supermarket')
     
+    # Parse the arguments
     args = parser.parse_args()
 
+    # If the add_product argument is passed, unpack the values and call the add_product function
     if args.add_product:
-        product_name, price = args.add_product
-        add_product(product_name, price)
+        product_name, price, quantity, expiration_date = args.add_product
+        add_product(product_name, price, quantity, expiration_date)
+    # If the remove_product argument is passed, call the remove_product function
     elif args.remove_product:
         remove_product(args.remove_product)
+    # If the list_products argument is passed, call the list_products function
     elif args.list_products:
         list_products()
+    # If no arguments are passed, print the help message
     else:
         parser.print_help()
 
-#need fixing
-def add_product(product_name, price):
+# Function to add a product to the CSV file
+def add_product(product_name, price, quantity, expiration_date):
+    # Open the CSV file in append mode
     with open('products.csv', 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([product_name, price])
-    print(f'Added product: {product_name} with price: {price}')
+        # Write the product details as a new row in the CSV file
+        writer.writerow([product_name, price, quantity, expiration_date])
+    # Print a confirmation message
+    print(f'Added product: {product_name} with price: {price} and quantity: {quantity} and expiration date: {expiration_date}')
 
+# Function to remove a product from the CSV file
 def remove_product(product_name):
+    # Get the list of products without printing the table
     products = list_products(print_table=False)
+    # Create a new list of products without the product to be removed
     products = [product for product in products if product[0] != product_name]
+    # Open the CSV file in write mode
     with open('products.csv', 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerows(products)  # Write the remaining products
+        # Write the remaining products to the CSV file
+        writer.writerows(products)
+    # Print a confirmation message
     print(f'Successfully removed product: {product_name}')
-
+    
+# Function to list the products
 def list_products(print_table=True):
+    # Open the CSV file in read mode
     with open('products.csv', 'r') as file:
+        # Create a CSV reader
         reader = csv.reader(file)
+        # Read the products into a list
         products = list(reader)
+        # If the print_table argument is True, print the table
         if print_table:
-            table = PrettyTable(['Product Name', 'Price', 'Quantity', 'Expiration Date'])  # Set the column names
-            for product in products:  # Add each product as a row
-                if len(product) == 4:  # Check if product has the correct number of columns
-                    product = [str(element).strip() for element in product]  # Convert each element to a string and strip whitespace
+            # Create a table with column names
+            table = PrettyTable(['Product Name', 'Price', 'Quantity', 'Expiration Date'])
+            # For each product in the list
+            for product in products:
+                # If the product has the correct number of columns
+                if len(product) == 4:
+                    # Convert each element to a string and strip whitespace
+                    product = [str(element).strip() for element in product]
+                    # Add the product as a row in the table
                     table.add_row(product)
                 else:
+                    # If the product does not have the correct number of columns, print a warning message
                     print(f"Skipping product {product} because it has {len(product)} columns instead of 4.")
+            # Print the table
             print(table)
+    # Return the list of products
     return products
-    
-    
-
 
 if __name__ == "__main__":
     main()
