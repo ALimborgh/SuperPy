@@ -37,29 +37,56 @@ def main():
     else:
         parser.print_help()
 
-# Function to add a product to the CSV file
-def add_product(product_name, price, quantity, expiration_date):
+def add_to_csv(product_name, price, quantity, expiration_date, filename):
     # Open the CSV file in append mode
-    with open('products.csv', 'a', newline='') as file:
+    with open(filename, 'a', newline='') as file:
         writer = csv.writer(file)
         # Write the product details as a new row in the CSV file
         writer.writerow([product_name, price, quantity, expiration_date])
     # Print a confirmation message
-    print(f'Added product: {product_name} with price: {price} and quantity: {quantity} and expiration date: {expiration_date}')
+    print(f'Added product: {product_name} with price: {price} and quantity: {quantity} and expiration date: {expiration_date} to {filename}')
+    
+def add_product(product_name, price, quantity, expiration_date):
+    add_to_csv(product_name, price, quantity, expiration_date, 'bought.csv')
 
-# Function to remove a product from the CSV file
 def remove_product(product_name):
-    # Get the list of products without printing the table
-    products = list_products(print_table=False)
-    # Create a new list of products without the product to be removed
+    # Get the product details
+    product = get_product_details(product_name)
+    if product:
+        price, quantity, expiration_date = product
+        # Add the product to the 'sold.csv' file
+        add_to_csv(product_name, price, quantity, expiration_date, 'sold.csv')
+        # Remove the product from the 'bought.csv' file
+        remove_from_csv(product_name, 'bought.csv')
+
+def remove_from_csv(product_name, filename):
+    # Open the CSV file in read mode
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        # Read the products into a list
+        products = list(reader)
+
+    # Filter out the product to be removed
     products = [product for product in products if product[0] != product_name]
+
     # Open the CSV file in write mode
-    with open('products.csv', 'w', newline='') as file:
+    with open(filename, 'w', newline='') as file:
         writer = csv.writer(file)
-        # Write the remaining products to the CSV file
-        writer.writerows(products)
-    # Print a confirmation message
-    print(f'Successfully removed product: {product_name}')
+        # Write each product to the CSV file
+        for product in products:
+            writer.writerow(product)
+        
+def get_product_details(product_name):
+    # Open the CSV file in read mode
+    with open('bought.csv', 'r') as file:
+        reader = csv.reader(file)
+        # Read the products into a list
+        products = list(reader)
+        # Find the product with the given name
+        for product in products:
+            if product[0] == product_name:
+                return product[1:]
+    return None
     
 # Function to list the products
 def list_products(print_table=True):
