@@ -19,11 +19,11 @@ class TestMain(unittest.TestCase):
 
     def test_sell_product(self):
         # Test selling a product
-        sell_product('Apple', 0.5)
+        sell_product('Apple', 3)
         # Open the 'sold.csv' file and check if the product details are correct
         with open('sold.csv', 'r') as file:
             last_line = list(csv.reader(file))[-1]
-            self.assertEqual(last_line, ['Apple', '1.0', '10', '2022-12-31', '0.5', date.today().strftime('%Y-%m-%d')])
+            self.assertEqual(last_line, ['Apple', '1.0', '10', '2022-12-31', '3', date.today().strftime('%Y-%m-%d')])
 
     def test_list_products(self):
         # Test listing the products
@@ -48,8 +48,8 @@ class TestMain(unittest.TestCase):
     
     def test_calculate_profit(self):
         # Test calculating the profit
-        profit = calculate_profit('2022-12-31')
-        self.assertEqual(profit, 0.0)
+        profit = calculate_profit('2024-06-06')
+        self.assertEqual(profit, 2.0)
 
 if __name__ == '__main__':
     unittest.main()
