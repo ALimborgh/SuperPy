@@ -31,9 +31,11 @@ class TimeMachine:
     def travel_forward(self, days):
         self.current_date = (datetime.strptime(self.current_date, '%Y-%m-%d') + timedelta(days=days)).strftime('%Y-%m-%d')
         self._save_date()
+        remove_expired_items(self.current_date)
     def travel_backward(self, days):
         self.current_date = (datetime.strptime(self.current_date, '%Y-%m-%d') - timedelta(days=days)).strftime('%Y-%m-%d')
         self._save_date()
+        remove_expired_items(self.current_date)
     def reset_date(self):
         self.current_date = datetime.today().strftime('%Y-%m-%d')
         self._save_date()
