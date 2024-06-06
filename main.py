@@ -48,19 +48,21 @@ def main():
     else:
         parser.print_help()
 
+# TimeMachine class
 class TimeMachine:
+    # Constructor
     def __init__(self):
         self.current_time = datetime.now()
-
+    # Method to get the current time
     def get_current_time(self):
         return self.current_time
-
+    # Method to set the current time
     def travel_forward(self, days=0, hours=0, minutes=0, seconds=0):
         self.current_time += timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
-
+    # Method to set the current time
     def travel_backward(self, days=0, hours=0, minutes=0, seconds=0):
         self.current_time -= timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
-
+# Create a TimeMachine instance
 time_machine = TimeMachine()
 
 # Function to add a bought product to a CSV file
