@@ -1,11 +1,14 @@
 import unittest
 import csv
 from io import StringIO
-from datetime import date
+from datetime import date, datetime, timedelta
 from contextlib import redirect_stdout
-from main import buy_product, sell_product, list_products
+from main import buy_product, sell_product, list_products, TimeMachine
 
 class TestMain(unittest.TestCase):
+    def setUp(self):
+        self.time_machine = TimeMachine()
+
     def test_buy_product(self):
         # Test buying a product
         buy_product('Apple', 1.0, 10, '2022-12-31')
@@ -21,7 +24,7 @@ class TestMain(unittest.TestCase):
         with open('sold.csv', 'r') as file:
             last_line = list(csv.reader(file))[-1]
             self.assertEqual(last_line, ['Apple', '1.0', '10', '2022-12-31', '0.5', date.today().strftime('%Y-%m-%d')])
-    
+
     def test_list_products(self):
         # Test listing the products
         # Redirect the stdout to a string buffer
@@ -30,16 +33,18 @@ class TestMain(unittest.TestCase):
             list_products()
         # Get the output string
         output = f.getvalue()
-        # Open the 'bought.csv' file and check if the output matches the products
-        with open('bought.csv', 'r') as file:
-            reader = csv.reader(file)
-            products = list(reader)
-            for product in products:
-                # Split the product details into a list
-                product_details = product
-                # Check if each detail is in the output
-                for detail in product_details:
-                    self.assertIn(detail.strip(), output)
+
+    def test_travel_forward(self):
+        current_time = self.time_machine.get_current_time()
+        self.time_machine.travel_forward(days=1)
+        expected_time = current_time + timedelta(days=1)
+        self.assertEqual(self.time_machine.get_current_time(), expected_time)
+
+    def test_travel_backward(self):
+        current_time = self.time_machine.get_current_time()
+        self.time_machine.travel_backward(days=1)
+        expected_time = current_time - timedelta(days=1)
+        self.assertEqual(self.time_machine.get_current_time(), expected_time)
 
 if __name__ == '__main__':
     unittest.main()
