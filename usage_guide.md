@@ -1,6 +1,6 @@
 Superpy is een command-line interface (CLI) tool voor het beheren van supermarktaankopen en -verkopen. Deze gids legt uit hoe je de verschillende commando's van Superpy kunt gebruiken.
 
-Algemene Syntax
+##Algemene Syntax
 
 ```
 python main.py <command> [options]
@@ -17,7 +17,7 @@ Beschikbare Commando's:
 7. revenue - Bereken de omzet voor een specifieke datum
 8. reset_date - Reset de datum naar de huidige datum
 
-Command Details
+##Command Details
 
 1. `buy`
 
@@ -155,7 +155,7 @@ Voorbeeld:
 python main.py reset_date
 ```
 
-Voorbeelden en Scenario's
+##Voorbeelden en Scenario's
 
 1. Product kopen en verkopen
 
