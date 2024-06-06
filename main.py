@@ -1,8 +1,9 @@
 # Imports
 import argparse
 import csv
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from prettytable import PrettyTable
+import os
 
 # Do not change these lines.
 __winc_id__ = "a2bc36ea784242e4989deb157d527ba0"
@@ -43,7 +44,14 @@ def main():
 
     # Create a parser for the "profit" command
     profit_parser = subparsers.add_parser('profit', help='Calculate profit for a specific date')
-    profit_parser.add_argument('date', help='The date to calculate profit for (format: YYYY-MM-DD)')
+    profit_parser.add_argument('date', help='The date to calculate profit for (format: YYYY-MM-DD, "today", or "yesterday")')
+
+    # Create a parser for the "revenue" command
+    revenue_parser = subparsers.add_parser('revenue', help='Calculate revenue for a specific date')
+    revenue_parser.add_argument('date', help='The date to calculate revenue for (format: YYYY-MM-DD, "today", or "yesterday")')
+    
+    # Create a parser for the "reset" command
+    reset_parser = subparsers.add_parser('reset_date', help='Reset the date')
 
     # Parse the arguments
     args = parser.parse_args()
@@ -62,7 +70,12 @@ def main():
         time_machine.travel_backward(days=args.days)
         print(f"Traveled backward in time by {args.days} day(s). Current time: {time_machine.get_current_time()}")
     elif args.command == 'profit':
-        print(f"Total profit: {calculate_profit(args.date)}")
+        print(f"The total profit on {args.date} is: {calculate_profit(args.date)}")
+    elif args.command == 'revenue':
+        print(f"The total revenue on {args.date} is: {calculate_revenue(args.date)}")
+    elif args.command == 'reset_date':
+        time_machine.reset_date()
+        print(f"Reset the date to the current date: {time_machine.get_current_time()}")
     # If no arguments are passed, print the help message
     else:
         parser.print_help()
@@ -71,16 +84,36 @@ def main():
 class TimeMachine:
     # Constructor
     def __init__(self):
-        self.current_time = datetime.now()
+        if os.path.exists('date.txt') and os.stat('date.txt').st_size != 0:
+            with open('date.txt', 'r') as file:
+                self.current_date = file.read().strip()
+        else:
+            self.current_date = datetime.today().strftime('%Y-%m-%d')
+
+    # Method to travel forward in time
+    def travel_forward(self, days):
+        self.current_date = (datetime.strptime(self.current_date, '%Y-%m-%d') + timedelta(days=days)).strftime('%Y-%m-%d')
+        self._save_date()
+
+    # Method to travel backward in time
+    def travel_backward(self, days):
+        self.current_date = (datetime.strptime(self.current_date, '%Y-%m-%d') - timedelta(days=days)).strftime('%Y-%m-%d')
+        self._save_date()
+    
+    # Method to reset the date to the current date
+    def reset_date(self):
+        self.current_date = datetime.today().strftime('%Y-%m-%d')
+        self._save_date()
+
     # Method to get the current time
     def get_current_time(self):
-        return self.current_time
-    # Method to set the current time
-    def travel_forward(self, days=0, hours=0, minutes=0, seconds=0):
-        self.current_time += timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
-    # Method to set the current time
-    def travel_backward(self, days=0, hours=0, minutes=0, seconds=0):
-        self.current_time -= timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
+        return self.current_date
+
+    # Private method to save the current date to a file
+    def _save_date(self):
+        with open('date.txt', 'w') as file:
+            file.write(self.current_date)
+
 # Create a TimeMachine instance
 time_machine = TimeMachine()
 
@@ -107,24 +140,26 @@ def add_sold_to_csv(product_name, price, quantity, expiration_date, filename='so
 # Function to buy a product
 def buy_product(product_name, price, quantity, expiration_date, filename='bought.csv', bought_date=None):
     # If no date is provided, use the current date
-    if not bought_date:
+    if not bought_date or bought_date.lower() == 'today':
         bought_date = time_machine.get_current_time()
+    elif bought_date.lower() == 'yesterday':
+        bought_date = (datetime.strptime(time_machine.get_current_time(), '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
     # Add the product to the 'bought.csv' file
-    bought_date_str = bought_date.strftime('%Y-%m-%d')
-    add_bought_to_csv(product_name, price, quantity, expiration_date, filename, bought_date_str)
+    add_bought_to_csv(product_name, price, quantity, expiration_date, filename, bought_date)
 
 # Function to sell a product
 def sell_product(product_name, sell_price, sold_date=None, filename='sold.csv'):
     # If no date is provided, use the current date
-    if not sold_date:
+    if not sold_date or sold_date.lower() == 'today':
         sold_date = time_machine.get_current_time()
+    elif sold_date.lower() == 'yesterday':
+        sold_date = (datetime.strptime(time_machine.get_current_time(), '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
     # Get the product details
     product = get_product_details(product_name)
     if product:
         price, quantity, expiration_date, bought_date= product
         # Add the product to the 'sold.csv' file
-        sold_date_str = sold_date.strftime('%Y-%m-%d')
-        add_sold_to_csv(product_name, price, quantity, expiration_date, filename, sell_price, sold_date_str)
+        add_sold_to_csv(product_name, price, quantity, expiration_date, filename, sell_price, sold_date)
         # Remove the product from the 'bought.csv' file
         remove_from_csv(product_name, 'bought.csv')
     else:
@@ -192,7 +227,16 @@ def list_products(print_table=True):
     # Return the list of products
     return products
 
-def calculate_profit(date):
+def calculate_profit(date='today'):
+    # If 'today' is specified, use the TimeMachine's current date
+    if date.lower() == 'today':
+        date = time_machine.get_current_time()
+    elif date.lower() == 'yesterday':
+        date = (datetime.strptime(time_machine.get_current_time(), '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
+    else:
+        # If a specific date is specified, parse the date string into a date object
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+    
     # Initialize the total profit to 0
     total_profit = 0.0
 
@@ -220,6 +264,41 @@ def calculate_profit(date):
 
     # Return the total profit
     return total_profit
+
+def calculate_revenue(date='today'):
+    # If 'today' is specified, use the TimeMachine's current date
+    if date.lower() == 'today':
+        date = time_machine.get_current_time()
+    elif date.lower() == 'yesterday':
+        date = (datetime.strptime(time_machine.get_current_time(), '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
+    else:
+        # If a specific date is specified, parse the date string into a date object
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+    
+    # Initialize the total revenue to 0
+    total_revenue = 0.0
+
+    # Convert the date from string to date object
+    date = datetime.strptime(date, '%Y-%m-%d').date()
+
+    # Open the 'sold.csv' file in read mode
+    with open('sold.csv', 'r') as sold_file:
+        # Create a CSV reader
+        sold_reader = csv.reader(sold_file)
+        # Read the sold products into a list
+        sold_products = list(sold_reader)
+
+    # For each sold product
+    for sold_product in sold_products:
+        # Check if the product was sold on or before the given date
+        if datetime.strptime(sold_product[5], '%Y-%m-%d').date() <= date:
+            # Get the sell price from the sold product
+            sell_price = float(sold_product[4])
+            # Add the sell price to the total revenue
+            total_revenue += sell_price
+
+    # Return the total revenue
+    return total_revenue
 
 if __name__ == "__main__":
     main()
