@@ -1,6 +1,7 @@
 Dit rapport belicht drie opmerkelijke technische elementen in de implementatie van het `superpy`Python-script, die cruciaal zijn voor de functionaliteit en efficiëntie van de applicatie.
 
 1. Gebruik van de `argparse`-module.
+
 Het eerste opvallende technische element is het gebruik van de argparse-module voor het parsen van command-line argumenten. Deze module stelt de gebruiker in staat om verschillende commando's (zoals 	`buy`, `sell`, `list`, `forward`, `backward`, `profit`, `revenue`, en `reset_date`) te gebruiken met specifieke argumenten. Dit lost het probleem op van het eenvoudig beheren van meerdere gebruikersinteracties en het organiseren van de logica voor elke functionaliteit in duidelijke, afzonderlijke blokken. De keuze voor argparse is gebaseerd op zijn robuustheid en flexibiliteit bij het bouwen van gebruiksvriendelijke CLI's.
 
 ```python
@@ -16,6 +17,7 @@ def main():
 ```
 
 2. Implementatie van de `TimeMachine`-klasse.
+
 Een ander significant technisch element is de `TimeMachine`-klasse, die de huidige datum beheert en tijdreizen mogelijk maakt. Deze klasse lost het probleem op van datumbeheer binnen de applicatie, waardoor gebruikers kunnen vooruit- of terugreizen in de tijd om de impact op aankopen en verkopen te simuleren. De `TimeMachine` slaat de huidige datum op in een bestand (`date.txt`), wat zorgt voor persistentie tussen sessies.
 
 ```python
@@ -43,6 +45,7 @@ class TimeMachine:
 ```
 
 3. Gebruik van de `rich`-bibliotheek voor console-uitvoer.
+
 Ten derde maakt het script gebruik van de `rich`-bibliotheek om kleurrijke en interactieve console-uitvoer te genereren. Dit lost het probleem op van een saaie en moeilijk te interpreteren tekstuitvoer door aantrekkelijke voortgangsbalken en gestileerde berichten te bieden. Dit verhoogt de gebruiksvriendelijkheid en maakt de interactie met de CLI intuïtiever en aangenamer.
 
 ```python
@@ -68,4 +71,5 @@ elif args.command == 'sell':
 ```
 
 Conclusie.
+
 Deze drie technische elementen – de `argparse`-module, de `TimeMachine`-klasse en de `rich`-bibliotheek – dragen aanzienlijk bij aan de functionaliteit, flexibiliteit en gebruiksvriendelijkheid van het `superpy`-script. Elk element is zorgvuldig gekozen en geïmplementeerd om specifieke problemen op te lossen en een robuuste en intuïtieve gebruikerservaring te bieden.
