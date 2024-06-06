@@ -2,6 +2,7 @@
 import argparse
 import csv
 from datetime import date
+from datetime import datetime
 from prettytable import PrettyTable
 
 # Do not change these lines.
@@ -17,7 +18,7 @@ def main():
 
     # Add arguments to the parser
     parser.add_argument('-b', '--buy', nargs=4, metavar=('name', 'price', 'quantity', 'expiration'), help='Buy a new product')
-    parser.add_argument('-s', '--sell', metavar='name', help='Sell a product')
+    parser.add_argument('-s', '--sell', nargs=2, metavar=('name', 'sell-price'), help='Sell a product')
     parser.add_argument('-l', '--list', action='store_true', help='List all products')
 
     # Parse the arguments
@@ -29,7 +30,8 @@ def main():
         buy_product(name, price, quantity, expiration)
     # If the sell argument is passed, call the sell_product function
     elif args.sell:
-        sell_product(args.sell)
+        name, sell_price = args.sell
+        sell_product(name, sell_price)
     # If the list argument is passed, call the list_products function
     elif args.list:
         list_products()
@@ -37,15 +39,25 @@ def main():
     else:
         parser.print_help()
 
-# Function to add a product to a CSV file
-def add_to_csv(product_name, price, quantity, expiration_date, filename, bought_date=None):
+# Function to add a bought product to a CSV file
+def add_bought_to_csv(product_name, price, quantity, expiration_date, filename='bought.csv', bought_date_str=None):
     # Open the CSV file in append mode
     with open(filename, 'a', newline='') as file:
         writer = csv.writer(file)
         # Write the product details as a new row in the CSV file
-        writer.writerow([product_name, price, quantity, expiration_date, bought_date])
+        writer.writerow([product_name, price, quantity, expiration_date, bought_date_str])
     # Print a confirmation message
-    print(f'Added product: {product_name} with price: {price} and quantity: {quantity} and expiration date: {expiration_date} to {filename}')
+    print(f'Bought product: {product_name} with price: {price} and quantity: {quantity} and expiration date: {expiration_date}')
+
+# Function to add a sold product to a CSV file
+def add_sold_to_csv(product_name, price, quantity, expiration_date, filename='sold.csv', sell_price=None, sold_date_str=None):
+    # Open the CSV file in append mode
+    with open(filename, 'a', newline='') as file:
+        writer = csv.writer(file)
+        # Write the product details as a new row in the CSV file
+        writer.writerow([product_name, price, quantity, expiration_date, sell_price, sold_date_str])
+    # Print a confirmation message
+    print(f'Sold product: {product_name} with sell price: {sell_price} and sold date: {sold_date_str}')
 
 # Function to buy a product
 def buy_product(product_name, price, quantity, expiration_date, filename='bought.csv', bought_date=None):
@@ -54,20 +66,20 @@ def buy_product(product_name, price, quantity, expiration_date, filename='bought
         bought_date = date.today()
     # Add the product to the 'bought.csv' file
     bought_date_str = bought_date.strftime('%Y-%m-%d')
-    add_to_csv(product_name, price, quantity, expiration_date, filename, bought_date_str)
+    add_bought_to_csv(product_name, price, quantity, expiration_date, filename, bought_date_str)
 
 # Function to sell a product
-def sell_product(product_name, sold_date=None, filename='sold.csv'):
+def sell_product(product_name, sell_price, sold_date=None, filename='sold.csv'):
     # If no date is provided, use the current date
     if not sold_date:
         sold_date = date.today()
     # Get the product details
     product = get_product_details(product_name)
     if product:
-        price, quantity, expiration_date, bought_date_str = product
+        price, quantity, expiration_date, bought_date= product
         # Add the product to the 'sold.csv' file
         sold_date_str = sold_date.strftime('%Y-%m-%d')
-        add_to_csv(product_name, price, quantity, expiration_date, filename, sold_date_str)
+        add_sold_to_csv(product_name, price, quantity, expiration_date, filename, sell_price, sold_date_str)
         # Remove the product from the 'bought.csv' file
         remove_from_csv(product_name, 'bought.csv')
     else:
