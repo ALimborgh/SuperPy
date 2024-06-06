@@ -15,35 +15,54 @@ def main():
     # Create an argument parser
     parser = argparse.ArgumentParser(description='Supermarket CLI')
 
-    # Add arguments to the parser
-    parser.add_argument('-b', '--buy', nargs=4, metavar=('name', 'price', 'quantity', 'expiration'), help='Buy a new product')
-    parser.add_argument('-s', '--sell', nargs=2, metavar=('name', 'sell-price'), help='Sell a product')
-    parser.add_argument('-l', '--list', action='store_true', help='List all products')
-    parser.add_argument('--forward', type=int, help='Number of days to travel forward in time.')
-    parser.add_argument('--backward', type=int, help='Number of days to travel backward in time.')
-    
+    # Create subparsers
+    subparsers = parser.add_subparsers(dest='command')
+
+    # Create a parser for the "buy" command
+    buy_parser = subparsers.add_parser('buy', help='Buy a new product')
+    buy_parser.add_argument('name', help='Product name')
+    buy_parser.add_argument('price', type=float, help='Product price')
+    buy_parser.add_argument('quantity', type=int, help='Product quantity')
+    buy_parser.add_argument('expiration', help='Product expiration date')
+
+    # Create a parser for the "sell" command
+    sell_parser = subparsers.add_parser('sell', help='Sell a product')
+    sell_parser.add_argument('name', help='Product name')
+    sell_parser.add_argument('sell_price', type=float, help='Selling price')
+
+    # Create a parser for the "list" command
+    list_parser = subparsers.add_parser('list', help='List all products')
+
+    # Create a parser for the "forward" command
+    forward_parser = subparsers.add_parser('forward', help='Travel forward in time')
+    forward_parser.add_argument('days', type=int, help='Number of days to travel forward')
+
+    # Create a parser for the "backward" command
+    backward_parser = subparsers.add_parser('backward', help='Travel backward in time')
+    backward_parser.add_argument('days', type=int, help='Number of days to travel backward')
+
+    # Create a parser for the "profit" command
+    profit_parser = subparsers.add_parser('profit', help='Calculate profit for a specific date')
+    profit_parser.add_argument('date', help='The date to calculate profit for (format: YYYY-MM-DD)')
+
     # Parse the arguments
     args = parser.parse_args()
 
-    # If the buy argument is passed, unpack the values and call the buy_product function
-    if args.buy:
-        name, price, quantity, expiration = args.buy
-        buy_product(name, price, quantity, expiration)
-    # If the sell argument is passed, call the sell_product function
-    elif args.sell:
-        name, sell_price = args.sell
-        sell_product(name, sell_price)
-    # If the list argument is passed, call the list_products function
-    elif args.list:
+    # Call the appropriate function based on the command
+    if args.command == 'buy':
+        buy_product(args.name, args.price, args.quantity, args.expiration)
+    elif args.command == 'sell':
+        sell_product(args.name, args.sell_price)
+    elif args.command == 'list':
         list_products()
-    # If the forward argument is passed, call the travel_forward function
-    elif args.forward:
-        time_machine.travel_forward(days=args.forward)
-        print(f"Traveled forward in time by {args.forward} day(s). Current time: {time_machine.get_current_time()}")
-    # If the backward argument is passed, call the travel_backward function
-    elif args.backward:
-        time_machine.travel_backward(days=args.backward)
-        print(f"Traveled backward in time by {args.backward} day(s). Current time: {time_machine.get_current_time()}")
+    elif args.command == 'forward':
+        time_machine.travel_forward(days=args.days)
+        print(f"Traveled forward in time by {args.days} day(s). Current time: {time_machine.get_current_time()}")
+    elif args.command == 'backward':
+        time_machine.travel_backward(days=args.days)
+        print(f"Traveled backward in time by {args.days} day(s). Current time: {time_machine.get_current_time()}")
+    elif args.command == 'profit':
+        print(f"Total profit: {calculate_profit(args.date)}")
     # If no arguments are passed, print the help message
     else:
         parser.print_help()
@@ -172,6 +191,35 @@ def list_products(print_table=True):
             print(table)
     # Return the list of products
     return products
+
+def calculate_profit(date):
+    # Initialize the total profit to 0
+    total_profit = 0.0
+
+    # Convert the date from string to date object
+    date = datetime.strptime(date, '%Y-%m-%d').date()
+
+    # Open the 'sold.csv' file in read mode
+    with open('sold.csv', 'r') as sold_file:
+        # Create a CSV reader
+        sold_reader = csv.reader(sold_file)
+        # Read the sold products into a list
+        sold_products = list(sold_reader)
+
+    # For each sold product
+    for sold_product in sold_products:
+        # Check if the product was sold on or before the given date
+        if datetime.strptime(sold_product[5], '%Y-%m-%d').date() <= date:
+            # Get the buy price and sell price from the sold product
+            buy_price = float(sold_product[1])
+            sell_price = float(sold_product[4])
+            # Calculate the profit for this product
+            profit = sell_price - buy_price
+            # Add the profit to the total profit
+            total_profit += profit
+
+    # Return the total profit
+    return total_profit
 
 if __name__ == "__main__":
     main()
