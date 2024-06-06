@@ -108,6 +108,40 @@ def main():
     # If no arguments are passed, print the help message
     else:
         parser.print_help()
+        
+def remove_expired_items(current_date): 
+    # Create a console object
+    console= Console()
+    # Read the inventory from the CSV file
+    with open('bought.csv', 'r') as file:
+        reader = csv.reader(file)
+        inventory = list(reader)
+
+    # Open the CSV file for expired items in append mode
+    with open('expired_items.csv', 'a', newline='') as file:
+        writer = csv.writer(file)
+        
+        # Loop through the inventory in reverse (to avoid issues with removing items)
+        for i in reversed(range(len(inventory))):
+            # Parse the expiration date
+            expiration_date = datetime.strptime(inventory[i][3], '%Y-%m-%d')
+            current_date = datetime.strptime(current_date, '%Y-%m-%d')
+            # Check if the item has expired
+            if current_date > expiration_date:
+                print(f"The item {inventory[i][0]} has expired and will be removed from the inventory.")
+                
+                # Write the expired item to the CSV file
+                writer.writerow(inventory[i])
+                
+                # Remove the item from the inventory
+                del inventory[i]
+
+    # Write the remaining items back to the original CSV file
+    with open('bought.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(inventory)
+    # Print a message to confirm the removal of expired items
+    console.print("Expired items have been removed from the inventory.", style="bold red")
 
 # TimeMachine class
 class TimeMachine:
@@ -123,11 +157,17 @@ class TimeMachine:
     def travel_forward(self, days):
         self.current_date = (datetime.strptime(self.current_date, '%Y-%m-%d') + timedelta(days=days)).strftime('%Y-%m-%d')
         self._save_date()
+        
+        # Remove expired items
+        remove_expired_items(self.current_date)
 
     # Method to travel backward in time
     def travel_backward(self, days):
         self.current_date = (datetime.strptime(self.current_date, '%Y-%m-%d') - timedelta(days=days)).strftime('%Y-%m-%d')
         self._save_date()
+        
+        # Remove expired items
+        remove_expired_items(self.current_date)
     
     # Method to reset the date to the current date
     def reset_date(self):
