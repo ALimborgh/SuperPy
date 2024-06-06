@@ -1,8 +1,7 @@
 # Imports
 import argparse
 import csv
-from datetime import date
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from prettytable import PrettyTable
 
 # Do not change these lines.
@@ -20,7 +19,9 @@ def main():
     parser.add_argument('-b', '--buy', nargs=4, metavar=('name', 'price', 'quantity', 'expiration'), help='Buy a new product')
     parser.add_argument('-s', '--sell', nargs=2, metavar=('name', 'sell-price'), help='Sell a product')
     parser.add_argument('-l', '--list', action='store_true', help='List all products')
-
+    parser.add_argument('--forward', type=int, help='Number of days to travel forward in time.')
+    parser.add_argument('--backward', type=int, help='Number of days to travel backward in time.')
+    
     # Parse the arguments
     args = parser.parse_args()
 
@@ -35,9 +36,32 @@ def main():
     # If the list argument is passed, call the list_products function
     elif args.list:
         list_products()
+    # If the forward argument is passed, call the travel_forward function
+    elif args.forward:
+        time_machine.travel_forward(days=args.forward)
+        print(f"Traveled forward in time by {args.forward} day(s). Current time: {time_machine.get_current_time()}")
+    # If the backward argument is passed, call the travel_backward function
+    elif args.backward:
+        time_machine.travel_backward(days=args.backward)
+        print(f"Traveled backward in time by {args.backward} day(s). Current time: {time_machine.get_current_time()}")
     # If no arguments are passed, print the help message
     else:
         parser.print_help()
+
+class TimeMachine:
+    def __init__(self):
+        self.current_time = datetime.now()
+
+    def get_current_time(self):
+        return self.current_time
+
+    def travel_forward(self, days=0, hours=0, minutes=0, seconds=0):
+        self.current_time += timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
+
+    def travel_backward(self, days=0, hours=0, minutes=0, seconds=0):
+        self.current_time -= timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
+
+time_machine = TimeMachine()
 
 # Function to add a bought product to a CSV file
 def add_bought_to_csv(product_name, price, quantity, expiration_date, filename='bought.csv', bought_date_str=None):
@@ -63,7 +87,7 @@ def add_sold_to_csv(product_name, price, quantity, expiration_date, filename='so
 def buy_product(product_name, price, quantity, expiration_date, filename='bought.csv', bought_date=None):
     # If no date is provided, use the current date
     if not bought_date:
-        bought_date = date.today()
+        bought_date = time_machine.get_current_time()
     # Add the product to the 'bought.csv' file
     bought_date_str = bought_date.strftime('%Y-%m-%d')
     add_bought_to_csv(product_name, price, quantity, expiration_date, filename, bought_date_str)
@@ -72,7 +96,7 @@ def buy_product(product_name, price, quantity, expiration_date, filename='bought
 def sell_product(product_name, sell_price, sold_date=None, filename='sold.csv'):
     # If no date is provided, use the current date
     if not sold_date:
-        sold_date = date.today()
+        sold_date = time_machine.get_current_time()
     # Get the product details
     product = get_product_details(product_name)
     if product:
