@@ -2,8 +2,11 @@
 import argparse
 import csv
 from datetime import datetime, timedelta
-from prettytable import PrettyTable
+import time
 import os
+from rich.console import Console
+from rich.table import Table
+from rich.progress import Progress
 
 # Do not change these lines.
 __winc_id__ = "a2bc36ea784242e4989deb157d527ba0"
@@ -55,27 +58,53 @@ def main():
 
     # Parse the arguments
     args = parser.parse_args()
+    
+    # Create a console object
+    console= Console()
 
-    # Call the appropriate function based on the command
+ # Call the appropriate function based on the command
     if args.command == 'buy':
+        # Create a progress bar
+        progress = Progress()
+        with progress:
+            task = progress.add_task("[cyan]Buying...", total=100)
+            while not progress.finished:
+                progress.update(task, advance=10)
+                time.sleep(0.2)
         buy_product(args.name, args.price, args.quantity, args.expiration)
+        # Print a message to confirm the purchase
+        console.print(f"Bought {args.quantity} {args.name}(s) with price {args.price} each and expiration date {args.expiration}.", style="bold blue")
     elif args.command == 'sell':
+        # Create a progress bar
+        progress = Progress()
+        with progress:
+            task = progress.add_task("[cyan]Selling...", total=100)
+            while not progress.finished:
+                progress.update(task, advance=10)
+                time.sleep(0.2)
         sell_product(args.name, args.sell_price)
+        # Print a message to confirm the sale
+        console.print(f"Sold {args.name} for {args.sell_price}.", style="bold blue")
     elif args.command == 'list':
         list_products()
     elif args.command == 'forward':
         time_machine.travel_forward(days=args.days)
-        print(f"Traveled forward in time by {args.days} day(s). Current time: {time_machine.get_current_time()}")
+        # Print a message to confirm the time travel
+        console.print(f"Traveled forward in time by {args.days} day(s). Current time: {time_machine.get_current_time()}", style="bold green")
     elif args.command == 'backward':
         time_machine.travel_backward(days=args.days)
-        print(f"Traveled backward in time by {args.days} day(s). Current time: {time_machine.get_current_time()}")
+        # Print a message to confirm the time travel
+        console.print(f"Traveled backward in time by {args.days} day(s). Current time: {time_machine.get_current_time()}", style="bold red")
     elif args.command == 'profit':
-        print(f"The total profit on {args.date} is: {calculate_profit(args.date)}")
+        # Calculate the profit for the specified date
+        console.print(f"The total profit on {args.date} is: {calculate_profit(args.date)}", style="bold yellow")
     elif args.command == 'revenue':
-        print(f"The total revenue on {args.date} is: {calculate_revenue(args.date)}")
+        # Calculate the revenue for the specified date
+        console.print(f"The total revenue on {args.date} is: {calculate_revenue(args.date)}", style="bold cyan")
     elif args.command == 'reset_date':
         time_machine.reset_date()
-        print(f"Reset the date to the current date: {time_machine.get_current_time()}")
+        # Print a message to confirm the date reset
+        console.print(f"Reset the date to the current date: {time_machine.get_current_time()}", style="bold magenta")
     # If no arguments are passed, print the help message
     else:
         parser.print_help()
@@ -124,8 +153,6 @@ def add_bought_to_csv(product_name, price, quantity, expiration_date, filename='
         writer = csv.writer(file)
         # Write the product details as a new row in the CSV file
         writer.writerow([product_name, price, quantity, expiration_date, bought_date_str])
-    # Print a confirmation message
-    print(f'Bought product: {product_name} with price: {price} and quantity: {quantity} and expiration date: {expiration_date}')
 
 # Function to add a sold product to a CSV file
 def add_sold_to_csv(product_name, price, quantity, expiration_date, filename='sold.csv', sell_price=None, sold_date_str=None):
@@ -134,8 +161,6 @@ def add_sold_to_csv(product_name, price, quantity, expiration_date, filename='so
         writer = csv.writer(file)
         # Write the product details as a new row in the CSV file
         writer.writerow([product_name, price, quantity, expiration_date, sell_price, sold_date_str])
-    # Print a confirmation message
-    print(f'Sold product: {product_name} with sell price: {sell_price} and sold date: {sold_date_str}')
 
 # Function to buy a product
 def buy_product(product_name, price, quantity, expiration_date, filename='bought.csv', bought_date=None):
@@ -207,23 +232,30 @@ def list_products(print_table=True):
         reader = csv.reader(file)
         # Read the products into a list
         products = list(reader)
+
+        # Create a console object
+        console = Console()
+
+        # Create a table
+        table = Table(show_header=True, header_style="bold blue")
+        table.add_column("Product Name")
+        table.add_column("Price")
+        table.add_column("Quantity")
+        table.add_column("Expiration Date")
+        table.add_column("Bought Date")
+
+        # Convert each element to a string and strip whitespace
+        for product in products:
+            if len(product) == 5:
+                product = [str(element).strip() for element in product]
+                # Add the product as a row in the table
+                table.add_row(*product)
+            else:
+                # If the product does not have the correct number of columns, print a warning message
+                console.print(f"Skipping product {product} because it has {len(product)} columns instead of 5.")
         # If the print_table argument is True, print the table
         if print_table:
-            # Create a table with column names
-            table = PrettyTable(['Product Name', 'Price', 'Quantity', 'Expiration Date', 'Bought Date'])
-            # For each product in the list
-            for product in products:
-                # If the product has the correct number of columns
-                if len(product) == 5:
-                    # Convert each element to a string and strip whitespace
-                    product = [str(element).strip() for element in product]
-                    # Add the product as a row in the table
-                    table.add_row(product)
-                else:
-                    # If the product does not have the correct number of columns, print a warning message
-                    print(f"Skipping product {product} because it has {len(product)} columns instead of 5.")
-            # Print the table
-            print(table)
+            console.print(table)
     # Return the list of products
     return products
 
