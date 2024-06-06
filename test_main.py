@@ -3,7 +3,7 @@ import csv
 from io import StringIO
 from datetime import date, datetime, timedelta
 from contextlib import redirect_stdout
-from main import buy_product, sell_product, list_products, TimeMachine
+from main import buy_product, sell_product, list_products, TimeMachine, calculate_profit
 
 class TestMain(unittest.TestCase):
     def setUp(self):
@@ -45,6 +45,11 @@ class TestMain(unittest.TestCase):
         self.time_machine.travel_backward(days=1)
         expected_time = current_time - timedelta(days=1)
         self.assertEqual(self.time_machine.get_current_time(), expected_time)
+    
+    def test_calculate_profit(self):
+        # Test calculating the profit
+        profit = calculate_profit('2022-12-31')
+        self.assertEqual(profit, 0.0)
 
 if __name__ == '__main__':
     unittest.main()
